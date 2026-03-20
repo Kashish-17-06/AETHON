@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Artifex — Digital Trust Layer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <div class="scan-line" id="scan-line"></div>
+
+  <!-- ── NAVIGATION ── -->
+  <nav>
+    <div class="nav-logo">
+      <div class="logo-icon">🛡</div>
+      Artifex
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html" class="nav-active">Verify URL</a></li>
+      <li><a href="photo-verify.html">Photo Verify</a></li>
+      <li><a href="personal-search.html">Search About Me</a></li>
+    </ul>
+    <div class="nav-badge">Log-in</div>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <p class="hero-eyebrow"></p>
+    <h1 class="hero-title">
+      The Forger<br/>
+      Always leaves a<br/>
+      <span class="accent-word">mark.</span>
+    </h1>
+    <p class="hero-sub">
+      Paste any URL, text claim, or image link. VerifyIt analyses source credibility,
+      image authenticity, and cross-references fact-check databases — in seconds.
+    </p>
+  </section>
+
+  <!-- ── MAIN INPUT CARD ── -->
+  <div class="search-card">
+    <div class="input-tabs">
+      <button class="tab-btn active" id="tab-url"   onclick="setTab('URL')">🔗 URL</button>
+      <button class="tab-btn"        id="tab-claim" onclick="setTab('Claim')">💬 Text Claim</button>
+      <button class="tab-btn"        id="tab-image" onclick="setTab('Image')">🖼 Image Check</button>
+    </div>
+
+    <!-- URL panel -->
+    <div class="tab-panel active" id="panel-URL">
+      <div class="input-wrapper">
+        <span class="input-icon">🔗</span>
+        <input class="url-input" id="url-input"
+          placeholder="Paste a news article URL to verify…" type="text"/>
+        <button class="verify-btn" onclick="runVerification('URL')">Verify Now →</button>
+      </div>
+      <!-- <p class="tab-hint">Try: <span onclick="fillDemo('https://bbc.com/news/article-123')">bbc.com/…</span> for trusted &nbsp;|&nbsp; <span onclick="fillDemo('https://viraltruth24.net/breaking')">viraltruth24.net/…</span> for flagged</p> -->
+    </div>
+
+    <!-- Claim panel -->
+    <div class="tab-panel" id="panel-Claim">
+      <div class="input-wrapper textarea-wrapper">
+        <span class="input-icon" style="align-self:flex-start;margin-top:6px;">💬</span>
+        <textarea class="url-input claim-textarea" id="claim-input"
+          placeholder="Type or paste a headline or claim to fact-check…" rows="3"></textarea>
+        <button class="verify-btn" style="align-self:flex-end" onclick="runVerification('Claim')">Fact-Check →</button>
+      </div>
+      <p class="tab-hint">Try: <span onclick="fillClaim('Government has banned all cash transactions in India')">Government bans cash</span> &nbsp;|&nbsp; <span onclick="fillClaim('UK inflation figures rise to record high in March 2026')">UK inflation rise</span></p>
+    </div>
+
+    <!-- Image panel -->
+    <div class="tab-panel" id="panel-Image">
+      <div class="input-wrapper">
+        <span class="input-icon">🖼</span>
+        <input class="url-input" id="image-input"
+          placeholder="Paste an image URL to check for manipulation…" type="text"/>
+        <button class="verify-btn" onclick="runVerification('Image')">Analyse Image →</button>
+      </div>
+      <p class="tab-hint">Try: <span onclick="fillImage('protest2019.jpg')">protest photo</span> &nbsp;|&nbsp; <span onclick="fillImage('authentic-photo.jpg')">authentic image</span> &nbsp;|&nbsp; <a href="photo-verify.html" style="color:var(--accent2)">Full slider tool →</a></p>
+    </div>
+  </div>
+
+  <!-- ── LOADER ── -->
+  <div id="loader" class="loader-container">
+    <div class="loader-overlay" id="loader-inner">
+      <div class="loader-ring"></div>
+      <div class="loader-text" id="loader-text">Analysing content…</div>
+      <div class="loader-steps">
+        <div class="loader-step" id="ls1"><div class="step-dot"></div><span id="ls1-text">Checking source credibility database</span></div>
+        <div class="loader-step" id="ls2"><div class="step-dot"></div><span id="ls2-text">Scanning for image manipulation</span></div>
+        <div class="loader-step" id="ls3"><div class="step-dot"></div><span id="ls3-text">Cross-referencing fact-check archives</span></div>
+        <div class="loader-step" id="ls4"><div class="step-dot"></div><span id="ls4-text">Computing trust score</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESULTS AREA ── -->
+  <div id="results-area">
+    <div class="score-row">
+      <div class="score-card">
+        <div class="score-ring-wrap">
+          <svg width="110" height="110" viewBox="0 0 110 110">
+            <circle class="score-ring-bg" cx="55" cy="55" r="45"/>
+            <circle class="score-ring-fill" id="ring-fill" cx="55" cy="55" r="45"/>
+          </svg>
+          <div class="score-value">
+            <div class="score-number" id="score-num">--</div>
+            <div class="score-label-sm">TRUST</div>
+          </div>
+        </div>
+        <div class="score-verdict" id="verdict-text">—</div>
+        <div class="verdict-sub"   id="verdict-sub">pending</div>
+      </div>
+      <div class="detail-col">
+        <div class="detail-panel">
+          <div class="panel-header"><span class="panel-title">Source</span><span class="status-pill" id="source-pill">—</span></div>
+          <div class="panel-value" id="source-name">—</div>
+          <div class="panel-sub"   id="source-age">—</div>
+        </div>
+        <div class="detail-panel">
+          <div class="panel-header"><span class="panel-title">Media Authenticity</span><span class="status-pill" id="media-pill">—</span></div>
+          <div class="panel-value" id="media-val">—</div>
+          <div class="panel-sub"   id="media-sub">—</div>
+        </div>
+        <div class="detail-panel">
+          <div class="panel-header"><span class="panel-title">Fact-Check Coverage</span><span class="status-pill" id="fc-pill">—</span></div>
+          <div class="panel-value" id="fc-val">—</div>
+          <div class="panel-sub"   id="fc-sub">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image manipulation panel (Image tab only) -->
+    <div id="image-result-panel" style="display:none;margin-bottom:24px;">
+      <div class="signals-card" style="margin-bottom:0">
+        <div class="signals-title">// Image manipulation analysis</div>
+        <div id="image-analysis-content"></div>
+      </div>
+    </div>
+
+    <div class="signals-card">
+      <div class="signals-title">// Trust signals breakdown</div>
+      <div class="signal-row"><span class="signal-name">Source Credibility</span><div class="signal-bar-track"><div class="signal-bar-fill" id="bar1" style="background:var(--accent)"></div></div><span class="signal-score" id="score1">—</span></div>
+      <div class="signal-row"><span class="signal-name">Domain Age & History</span><div class="signal-bar-track"><div class="signal-bar-fill" id="bar2" style="background:var(--accent2)"></div></div><span class="signal-score" id="score2">—</span></div>
+      <div class="signal-row"><span class="signal-name">Headline Sensationalism</span><div class="signal-bar-track"><div class="signal-bar-fill" id="bar3" style="background:var(--warn)"></div></div><span class="signal-score" id="score3">—</span></div>
+      <div class="signal-row"><span class="signal-name">Author Verification</span><div class="signal-bar-track"><div class="signal-bar-fill" id="bar4" style="background:var(--accent)"></div></div><span class="signal-score" id="score4">—</span></div>
+      <div class="signal-row"><span class="signal-name">Cross-source Corroboration</span><div class="signal-bar-track"><div class="signal-bar-fill" id="bar5" style="background:var(--accent2)"></div></div><span class="signal-score" id="score5">—</span></div>
+    </div>
+
+    <div class="factcheck-card" id="fc-list">
+      <div class="signals-title">// Related fact-checks</div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-label">// AI Analysis Summary</div>
+      <p class="summary-text" id="summary-text">—</p>
+    </div>
+  </div>
+
+  <!-- ── PHOTO REVEAL TEASER ── -->
+  <div class="reveal-teaser-section">
+    <div class="section-divider">
+      <div class="divider-line"></div>
+      <div class="divider-label">See the difference</div>
+      <div class="divider-line"></div>
+    </div>
+    <div class="reveal-teaser-grid">
+      <div class="reveal-teaser-text">
+        <p class="teaser-eyebrow">// Photo Verification Tool</p>
+        <h2 class="teaser-heading">Drag to reveal <span>what's real.</span></h2>
+        <p class="teaser-desc">Our interactive reveal slider lets you compare an original photo side-by-side with its manipulated version. See exactly where AI-generated edits were made.</p>
+        <a href="photo-verify.html" class="teaser-btn">Open Photo Verify →</a>
+      </div>
+      <div class="mini-slider-wrap">
+        <div class="mini-slider" id="mini-slider">
+          <div class="mini-real">
+            <div class="mini-label mini-label-real">ORIGINAL</div>
+          </div>
+          <div class="mini-fake" id="mini-fake">
+            <div class="mini-label mini-label-fake">MANIPULATED</div>
+          </div>
+          <div class="mini-divider" id="mini-divider">
+            <div class="mini-handle">⟺</div>
+          </div>
+        </div>
+        <input type="range" min="0" max="100" value="50" class="mini-range" id="mini-range"
+               oninput="updateMiniSlider(this.value)"/>
+        <p style="text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);margin-top:8px;letter-spacing:0.05em;">DRAG SLIDER TO COMPARE</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STATS ── -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-number">4.2<span>M</span></div>
+      <div class="stat-desc">Articles verified<br/>in last 30 days</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">91<span>%</span></div>
+      <div class="stat-desc">Accuracy on known<br/>misinformation cases</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">0.8<span>s</span></div>
+      <div class="stat-desc">Average analysis<br/>time per article</div>
+    </div>
+  </div>
+
+  <!-- ── HOW IT WORKS ── -->
+  <section class="how-section">
+    <div class="section-divider">
+      <div class="divider-line"></div>
+      <div class="divider-label">How it works</div>
+      <div class="divider-line"></div>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01 —</div>
+        <span class="step-icon">🔗</span>
+        <div class="step-title">Submit Content</div>
+        <div class="step-desc">Paste any URL, news article link, social post, or type a specific claim you want verified.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02 —</div>
+        <span class="step-icon">🧠</span>
+        <div class="step-title">Multi-layer Analysis</div>
+        <div class="step-desc">Source credibility, image reverse-search, domain history, and 40+ fact-check databases.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03 —</div>
+        <span class="step-icon">📊</span>
+        <div class="step-title">Clear Trust Score</div>
+        <div class="step-desc">Get a 0–100 trust rating with plain-language explanation — no jargon, just the truth.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-copy">© 2026 <span>Artifex</span> — Fighting Misinformation</div>
+    <div class="footer-copy">Built for citizens: Digital Trust</div>
+  </footer>
+
+  <!-- <script src="app.js"></script> -->
+   <script src="app.js"></script>
+</body>
+</html>

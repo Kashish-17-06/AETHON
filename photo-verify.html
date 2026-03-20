@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VerifyIt — Photo Verify</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* ── PHOTO-VERIFY SPECIFIC INLINE STYLES ── */
+
+    /* Simulated photo scenes using pure CSS */
+    /* Scene A: Protest crowd (manipulated — crowd size inflated) */
+    .scene-a-real {
+      background: #1a2035;
+      position: relative; overflow: hidden;
+    }
+    .scene-a-real::before {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 55%;
+      background: linear-gradient(to top, #2a3a2a, #1e2e1e);
+    }
+    .scene-a-real::after {
+      content: '👥';
+      position: absolute; bottom: 20%; left: 10%; right: 10%;
+      font-size: 40px;
+      letter-spacing: 12px;
+      text-align: center;
+      opacity: 0.7;
+    }
+    .scene-a-fake {
+      background: #1a2035;
+      position: relative; overflow: hidden;
+    }
+    .scene-a-fake::before {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 55%;
+      background: linear-gradient(to top, #2a3a2a, #1e2e1e);
+    }
+    .scene-a-fake::after {
+      content: '👥👥👥';
+      position: absolute; bottom: 15%; left: 0; right: 0;
+      font-size: 36px;
+      letter-spacing: 4px;
+      text-align: center;
+      opacity: 0.85;
+    }
+    /* Red highlight boxes for fake scene */
+    .scene-a-highlight1 { position:absolute; top:38%; left:5%; width:88%; height:45%; border:2px dashed rgba(255,92,92,0.7); border-radius:6px; background:rgba(255,92,92,0.05); pointer-events:none; }
+    .scene-a-highlight2 { position:absolute; top:36%; left:55%; width:30%; height:16%; border:2px solid rgba(255,92,92,0.8); border-radius:4px; background:rgba(255,92,92,0.06); pointer-events:none; }
+    .scene-a-tag1 { position:absolute; top:34%; left:5%; font-family:'DM Mono',monospace; font-size:9px; color:rgba(255,92,92,0.9); letter-spacing:0.08em; background:rgba(20,0,0,0.7); padding:2px 7px; border-radius:3px; pointer-events:none; }
+    .scene-a-tag2 { position:absolute; top:34%; left:55%; font-family:'DM Mono',monospace; font-size:9px; color:rgba(255,92,92,0.9); letter-spacing:0.08em; background:rgba(20,0,0,0.7); padding:2px 7px; border-radius:3px; pointer-events:none; }
+
+    /* Sky strip */
+    .sky-strip-real { position:absolute; top:0; left:0; right:0; height:38%; background: linear-gradient(to bottom, #102030, #1e3a50); }
+    .sky-strip-fake { position:absolute; top:0; left:0; right:0; height:38%; background: linear-gradient(to bottom, #0a1520, #152535); }
+    .crowd-mid-real { position:absolute; bottom:40%; left:0; right:0; height:24%; display:flex; align-items:center; justify-content:center; font-size:28px; letter-spacing:8px; opacity:0.65; }
+    .crowd-mid-fake { position:absolute; bottom:35%; left:0; right:0; height:32%; display:flex; align-items:center; justify-content:center; font-size:26px; letter-spacing:4px; opacity:0.8; }
+
+    /* Scene B: Political figure (face replaced) */
+    .scene-b-real { background: #1e1e2e; position:relative; overflow:hidden; }
+    .scene-b-fake { background: #1e1e2e; position:relative; overflow:hidden; }
+    .person-bg { position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:60%; height:75%; background: linear-gradient(to top, #2a2040, #1a1530); border-radius:100px 100px 0 0; }
+    .person-head-real { position:absolute; top:18%; left:50%; transform:translateX(-50%); width:80px; height:80px; border-radius:50%; background: linear-gradient(135deg, #c8a882, #b89060); border:3px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:36px; }
+    .person-head-fake { position:absolute; top:18%; left:50%; transform:translateX(-50%); width:80px; height:80px; border-radius:50%; background: linear-gradient(135deg, #82a8c8, #6090b8); border:3px solid rgba(255,92,92,0.4); display:flex; align-items:center; justify-content:center; font-size:36px; }
+    .face-swap-indicator { position:absolute; top:16%; left:50%; transform:translateX(-50%); width:86px; height:86px; border-radius:50%; border:2px dashed rgba(255,92,92,0.8); pointer-events:none; }
+    .face-swap-tag { position:absolute; top:10%; left:53%; font-family:'DM Mono',monospace; font-size:9px; color:rgba(255,92,92,0.9); background:rgba(20,0,0,0.8); padding:2px 7px; border-radius:3px; pointer-events:none; white-space:nowrap; }
+    .podium-real { position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:40%; height:20%; background: linear-gradient(to top, #3a3050, #2a2040); border-radius:4px 4px 0 0; }
+    .podium-text { position:absolute; bottom:5%; left:50%; transform:translateX(-50%); font-family:'DM Mono',monospace; font-size:10px; color:rgba(255,255,255,0.3); white-space:nowrap; }
+    .backdrop-real { position:absolute; top:0; left:0; right:0; height:45%; background: linear-gradient(to bottom, #0a1525, #15254a); }
+    .backdrop-real::after { content:''; position:absolute; top:30%; left:10%; right:10%; height:2px; background:rgba(99,183,255,0.15); }
+    .name-bar { position:absolute; bottom:22%; left:10%; right:10%; height:24px; background:rgba(0,30,80,0.6); border-radius:4px; display:flex; align-items:center; padding:0 10px; }
+    .name-bar-text { font-family:'DM Mono',monospace; font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:0.1em; }
+
+    /* Scene C: Document (text altered) */
+    .scene-c-real { background: #f8f6f0; position:relative; overflow:hidden; }
+    .scene-c-fake { background: #f8f6f0; position:relative; overflow:hidden; }
+    .doc-paper { position:absolute; top:10%; left:8%; right:8%; bottom:5%; background:#fff; border-radius:6px; box-shadow: 0 2px 20px rgba(0,0,0,0.12); padding:16px; }
+    .doc-header { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:#1a1a2e; margin-bottom:10px; border-bottom:2px solid #1a1a2e; padding-bottom:6px; }
+    .doc-line { height:6px; border-radius:3px; margin-bottom:7px; }
+    .doc-line-full { background: rgba(0,0,0,0.08); width:100%; }
+    .doc-line-90   { background: rgba(0,0,0,0.08); width:90%; }
+    .doc-line-75   { background: rgba(0,0,0,0.08); width:75%; }
+    .doc-highlight-real { height:6px; border-radius:3px; margin-bottom:7px; background:rgba(59,255,200,0.3); width:80%; }
+    .doc-highlight-fake { height:6px; border-radius:3px; margin-bottom:7px; background:rgba(255,92,92,0.35); width:80%; border:1px dashed rgba(255,92,92,0.6); position:relative; }
+    .doc-highlight-fake::after { content:'ALTERED'; position:absolute; right:-40px; top:-1px; font-family:'DM Mono',monospace; font-size:8px; color:rgba(255,92,92,0.9); background:rgba(255,92,92,0.1); padding:1px 5px; border-radius:3px; border:1px solid rgba(255,92,92,0.4); }
+    .doc-stamp { position:absolute; bottom:18%; right:12%; width:60px; height:60px; border-radius:50%; border:3px solid rgba(0,100,200,0.3); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:7px; color:rgba(0,100,200,0.5); text-align:center; transform:rotate(-15deg); letter-spacing:0.05em; }
+
+    /* ── SCENE SWITCHER PREVIEW THUMBNAILS ── */
+    .thumb-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:32px; }
+    .thumb-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; cursor:pointer; transition:all 0.2s; }
+    .thumb-card:hover { border-color:var(--border-strong); }
+    .thumb-card.active { border-color:var(--accent); background:rgba(59,255,200,0.04); }
+    .thumb-title { font-size:13px; font-weight:700; letter-spacing:-0.3px; margin-bottom:4px; }
+    .thumb-badge { font-family:var(--font-mono); font-size:10px; padding:2px 8px; border-radius:100px; display:inline-block; margin-bottom:6px; }
+    .thumb-desc  { font-family:var(--font-mono); font-size:11px; color:var(--text-muted); font-weight:300; line-height:1.4; }
+  </style>
+</head>
+<body>
+
+  <div class="scan-line" id="scan-line"></div>
+
+  <!-- ── NAV ── -->
+  <nav>
+    <div class="nav-logo">
+      <div class="logo-icon">🛡</div>
+      VerifyIt
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Verify URL</a></li>
+      <li><a href="photo-verify.html" class="nav-active">Photo Verify</a></li>
+      <li><a href="personal-search.html">Search About Me</a></li>
+    </ul>
+    <div class="nav-badge">BETA v0.1</div>
+  </nav>
+
+  <!-- ── PAGE ── -->
+  <div class="photo-page">
+
+    <a href="index.html" class="back-link">← Back to VerifyIt</a>
+
+    <div class="photo-page-header">
+      <h1 class="photo-page-title">Photo <span>Reveal</span> Slider</h1>
+      <p class="photo-page-sub">
+        Drag the slider to compare an original photo against its manipulated version.
+        Highlighted regions show exactly where and how the image was altered.
+      </p>
+    </div>
+
+    <!-- Case thumbnails -->
+    <div class="thumb-grid" style="opacity:0;animation:fadeUp 0.5s ease forwards 0.3s">
+      <div class="thumb-card active" id="thumb-0" onclick="loadCase(0)">
+        <span class="thumb-badge badge-manipulated">MANIPULATED</span>
+        <div class="thumb-title">Crowd Size Inflated</div>
+        <div class="thumb-desc">Protest photo — crowd digitally multiplied to exaggerate turnout</div>
+      </div>
+      <div class="thumb-card" id="thumb-1" onclick="loadCase(1)">
+        <span class="thumb-badge badge-ai-gen">FACE SWAP</span>
+        <div class="thumb-title">Political Face Swap</div>
+        <div class="thumb-desc">Speaker's face replaced with AI-generated likeness of another person</div>
+      </div>
+      <div class="thumb-card" id="thumb-2" onclick="loadCase(2)">
+        <span class="thumb-badge badge-manipulated">ALTERED TEXT</span>
+        <div class="thumb-title">Document Altered</div>
+        <div class="thumb-desc">Official document — key figure edited from ₹10L to ₹100Cr</div>
+      </div>
+    </div>
+
+    <!-- ── REVEAL SLIDER ── -->
+    <div class="reveal-section" id="reveal-section">
+
+      <div class="reveal-meta">
+        <div class="reveal-title-text" id="reveal-title">Protest Photo — Crowd Inflated</div>
+        <span class="reveal-badge badge-manipulated" id="reveal-badge">MANIPULATED</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);margin-left:auto">Drag or use slider below</span>
+      </div>
+
+      <!-- THE MAIN SLIDER -->
+      <div class="reveal-slider-container" id="reveal-container">
+
+        <!-- REAL layer (full width, behind) -->
+        <div class="reveal-real" id="reveal-real">
+          <span class="reveal-layer-label label-real-pos">✓ ORIGINAL</span>
+          <!-- Scene content injected by JS -->
+        </div>
+
+        <!-- FAKE layer (clipped, on top) -->
+        <div class="reveal-fake" id="reveal-fake" style="width:50%">
+          <span class="reveal-layer-label label-fake-pos">⚠ MANIPULATED</span>
+          <!-- Scene content injected by JS -->
+        </div>
+
+        <!-- Divider line + handle -->
+        <div class="reveal-divider-line" id="reveal-divider" style="left:50%">
+          <div class="reveal-handle-btn" id="reveal-handle">⟺</div>
+        </div>
+
+      </div>
+
+      <!-- Range input -->
+      <div class="reveal-range-wrap">
+        <span class="range-label">ORIGINAL</span>
+        <input type="range" min="0" max="100" value="50" class="reveal-range" id="reveal-range"
+               oninput="moveReveal(this.value)"/>
+        <span class="range-label">MANIPULATED</span>
+      </div>
+
+      <!-- Analysis cards -->
+      <div class="analysis-grid" id="analysis-grid">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Manipulation details -->
+      <div class="manipulation-details" id="manip-details">
+        <div class="signals-title">// Manipulation findings</div>
+        <div class="manip-list" id="manip-list">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer style="max-width:860px;margin:0 auto;">
+    <div class="footer-copy">© 2026 <span>VerifyIt</span> — Fighting Misinformation</div>
+    <div class="footer-copy">Built for Challenge 4: Digital Trust</div>
+  </footer>
+
+  <script>
+  /* ============================================================
+     photo-verify.js (inline)
+     ============================================================ */
+
+  /* ── CASE DATA ── */
+  const CASES = [
+    {
+      title: "Protest Photo — Crowd Inflated",
+      badgeText: "MANIPULATED",
+      badgeClass: "badge-manipulated",
+      realScene: `
+        <div class="sky-strip-real"></div>
+        <div class="crowd-mid-real">👥 👥 👥</div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(to top,#2a3a2a,#1e2e1e)"></div>
+        <div style="position:absolute;bottom:8%;left:50%;transform:translateX(-50%);font-family:DM Mono,monospace;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.1em">EST. 200 ATTENDEES</div>`,
+      fakeScene: `
+        <div class="sky-strip-fake"></div>
+        <div class="crowd-mid-fake">👥👥👥👥👥👥👥👥👥👥</div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(to top,#2a3a2a,#1e2e1e)"></div>
+        <div class="scene-a-highlight1"></div>
+        <div class="scene-a-highlight2"></div>
+        <div class="scene-a-tag1">CLONED REGION</div>
+        <div class="scene-a-tag2">AI FILL</div>
+        <div style="position:absolute;bottom:8%;left:50%;transform:translateX(-50%);font-family:DM Mono,monospace;font-size:10px;color:rgba(255,92,92,0.6);letter-spacing:0.1em">EST. 2000 ATTENDEES ← FAKE</div>`,
+      analysis: [
+        { label:"Manipulation Confidence", value:"96%", cls:"val-danger", sub:"GAN artefacts detected" },
+        { label:"ELA Anomaly Score",        value:"High", cls:"val-danger", sub:"Inconsistent compression blocks" },
+        { label:"Technique Used",           value:"Clone Stamp + AI Infill", cls:"val-warn", sub:"Detected via pixel forensics" }
+      ],
+      findings: [
+        { dot:"manip-dot-danger", head:"Crowd region cloned and multiplied",      sub:"The right third of the crowd is a direct copy of the left third, stamped 3× using AI content-aware fill." },
+        { dot:"manip-dot-danger", head:"Compression artefacts at clone boundary", sub:"ELA reveals mismatched JPEG quality levels at x=320–360px, confirming post-processing edit boundary." },
+        { dot:"manip-dot-warn",   head:"Sky replaced with darker tone",           sub:"The sky gradient does not match the lighting direction of the crowd — indicating separate compositing." },
+        { dot:"manip-dot-safe",   head:"Foreground speakers appear unmodified",   sub:"The stage and front row pass verification — only the crowd background was altered." }
+      ]
+    },
+
+    {
+      title: "Political Figure — Face Swapped",
+      badgeText: "AI FACE SWAP",
+      badgeClass: "badge-ai-gen",
+      realScene: `
+        <div class="backdrop-real"></div>
+        <div class="person-bg"></div>
+        <div class="person-head-real">🧑</div>
+        <div class="podium-real"></div>
+        <div class="name-bar"><span class="name-bar-text">VERIFIED SPEAKER — MINISTER A. SHARMA</span></div>
+        <div class="podium-text">OFFICIAL PRESS CONFERENCE</div>`,
+      fakeScene: `
+        <div class="backdrop-real" style="background:linear-gradient(to bottom,#150a10,#2a1020)"></div>
+        <div class="person-bg"></div>
+        <div class="person-head-fake">👨</div>
+        <div class="face-swap-indicator"></div>
+        <div class="face-swap-tag">⚠ FACE REPLACED</div>
+        <div class="podium-real"></div>
+        <div class="name-bar" style="background:rgba(80,0,0,0.6)"><span class="name-bar-text" style="color:rgba(255,150,150,0.7)">ALTERED — DIFFERENT PERSON INSERTED</span></div>
+        <div class="podium-text">OFFICIAL PRESS CONFERENCE</div>`,
+      analysis: [
+        { label:"Deepfake Confidence", value:"91%",          cls:"val-danger", sub:"FaceForensics++ model" },
+        { label:"Face Boundary Seam",  value:"Detected",     cls:"val-danger", sub:"Blending artefact at hairline" },
+        { label:"Original Verified",   value:"Minister Sharma", cls:"val-safe", sub:"AFP archive match confirmed" }
+      ],
+      findings: [
+        { dot:"manip-dot-danger", head:"Face replaced using GAN deepfake model",    sub:"FaceForensics++ deep learning model flags this as a face-swap with 91% confidence. The face is from a different person entirely." },
+        { dot:"manip-dot-danger", head:"Blending seam visible at hairline region",  sub:"Sub-pixel analysis shows a blending boundary at the hairline edge where the original face was composited out." },
+        { dot:"manip-dot-warn",   head:"Neck skin tone mismatch",                   sub:"The neck and face have slightly different colour temperature values, consistent with separate capture conditions." },
+        { dot:"manip-dot-safe",   head:"Body, podium and background are authentic", sub:"Everything except the face region passes verification and matches the original AFP archive photograph." }
+      ]
+    },
+
+    {
+      title: "Official Document — Figure Altered",
+      badgeText: "ALTERED TEXT",
+      badgeClass: "badge-manipulated",
+      realScene: `
+        <div style="position:absolute;inset:0;background:#e8e4dc;"></div>
+        <div class="doc-paper">
+          <div class="doc-header">GOVERNMENT OF INDIA — OFFICIAL NOTICE</div>
+          <div class="doc-line doc-line-full"></div>
+          <div class="doc-line doc-line-90"></div>
+          <div class="doc-line doc-line-75"></div>
+          <div style="margin:10px 0 6px;font-family:DM Mono,monospace;font-size:9px;color:rgba(0,0,0,0.4);letter-spacing:0.05em">PENALTY AMOUNT:</div>
+          <div class="doc-highlight-real"></div>
+          <div style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:#1a3a1a;margin-bottom:12px">₹ 10,00,000 (Ten Lakh Rupees)</div>
+          <div class="doc-line doc-line-90"></div>
+          <div class="doc-line doc-line-75"></div>
+          <div class="doc-line doc-line-full"></div>
+          <div class="doc-stamp">GOVT<br/>SEAL<br/>2026</div>
+        </div>`,
+      fakeScene: `
+        <div style="position:absolute;inset:0;background:#e8e4dc;"></div>
+        <div class="doc-paper">
+          <div class="doc-header">GOVERNMENT OF INDIA — OFFICIAL NOTICE</div>
+          <div class="doc-line doc-line-full"></div>
+          <div class="doc-line doc-line-90"></div>
+          <div class="doc-line doc-line-75"></div>
+          <div style="margin:10px 0 6px;font-family:DM Mono,monospace;font-size:9px;color:rgba(0,0,0,0.4);letter-spacing:0.05em">PENALTY AMOUNT:</div>
+          <div class="doc-highlight-fake"></div>
+          <div style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:#8a0000;margin-bottom:12px;position:relative">
+            ₹ 1,00,00,00,000 (One Hundred Crore)
+            <span style="font-size:9px;color:rgba(255,92,92,0.8);font-weight:400;margin-left:8px">← EDITED</span>
+          </div>
+          <div class="doc-line doc-line-90"></div>
+          <div class="doc-line doc-line-75"></div>
+          <div class="doc-line doc-line-full"></div>
+          <div class="doc-stamp" style="border-color:rgba(255,92,92,0.4);color:rgba(255,92,92,0.5)">GOVT<br/>SEAL<br/>2026</div>
+        </div>`,
+      analysis: [
+        { label:"Text Manipulation",    value:"Confirmed",    cls:"val-danger", sub:"Photoshop layer detected in metadata" },
+        { label:"Font Inconsistency",   value:"Detected",     cls:"val-danger", sub:"Different kerning in edited region" },
+        { label:"Original Document",    value:"On record",    cls:"val-safe",   sub:"Verified via RTI database — ₹10L fine" }
+      ],
+      findings: [
+        { dot:"manip-dot-danger", head:"Document metadata shows Photoshop edit",           sub:"The PDF metadata contains an embedded Photoshop 2025 edit layer. The original export date was December 2025 but the file shows a modification in March 2026." },
+        { dot:"manip-dot-danger", head:"Font kerning mismatch in penalty figure",          sub:"The edited number uses Arial font at 98% kerning while the rest of the document uses the standard government typeface at 100% — visible difference in letter spacing." },
+        { dot:"manip-dot-warn",   head:"Government seal may be copy-pasted",               sub:"The seal shows repeated compression noise suggesting it was copied from a different document rather than embedded in the original." },
+        { dot:"manip-dot-safe",   head:"RTI database confirms ₹10L as original figure",   sub:"The original government notice is publicly accessible via the RTI portal. The penalty was ₹10,00,000 — not ₹1,00,00,00,000 as claimed in the edited version." }
+      ]
+    }
+  ];
+
+  /* ── STATE ── */
+  let currentCase = 0;
+  let isDragging  = false;
+
+  /* ── LOAD CASE ── */
+  function loadCase(idx) {
+    currentCase = idx;
+
+    // Update thumb cards
+    document.querySelectorAll(".thumb-card").forEach((c, i) => {
+      c.classList.toggle("active", i === idx);
+    });
+
+    const c = CASES[idx];
+
+    // Title + badge
+    document.getElementById("reveal-title").textContent = c.title;
+    const badge = document.getElementById("reveal-badge");
+    badge.textContent = c.badgeText;
+    badge.className = "reveal-badge " + c.badgeClass;
+
+    // Scene content
+    document.getElementById("reveal-real").innerHTML =
+      `<span class="reveal-layer-label label-real-pos">✓ ORIGINAL</span>` + c.realScene;
+    document.getElementById("reveal-fake").innerHTML =
+      `<span class="reveal-layer-label label-fake-pos">⚠ ${c.badgeText}</span>` + c.fakeScene;
+
+    // Reset slider to 50%
+    document.getElementById("reveal-range").value = 50;
+    moveReveal(50);
+
+    // Analysis cards
+    document.getElementById("analysis-grid").innerHTML = c.analysis.map(a => `
+      <div class="analysis-card">
+        <div class="analysis-card-label">${a.label}</div>
+        <div class="analysis-card-value ${a.cls}">${a.value}</div>
+        <div class="analysis-card-sub">${a.sub}</div>
+      </div>`).join("");
+
+    // Manipulation findings
+    document.getElementById("manip-list").innerHTML = c.findings.map(f => `
+      <div class="manip-item">
+        <div class="manip-dot ${f.dot}" style="margin-top:5px"></div>
+        <div>
+          <div class="manip-text-head">${f.head}</div>
+          <div class="manip-text-sub">${f.sub}</div>
+        </div>
+      </div>`).join("");
+  }
+
+  /* ── MOVE REVEAL ── */
+  function moveReveal(val) {
+    const pct = parseFloat(val);
+    document.getElementById("reveal-fake").style.width     = (100 - pct) + "%";
+    document.getElementById("reveal-divider").style.left   = pct + "%";
+    document.getElementById("reveal-range").value          = pct;
+  }
+
+  /* ── DRAG SUPPORT ── */
+  function initDrag() {
+    const container = document.getElementById("reveal-container");
+    if (!container) return;
+
+    function getX(e) {
+      const rect = container.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      return Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+    }
+
+    container.addEventListener("mousedown",  e => { isDragging = true; moveReveal(getX(e)); });
+    container.addEventListener("touchstart", e => { isDragging = true; moveReveal(getX(e)); }, { passive: true });
+
+    document.addEventListener("mousemove",  e => { if (isDragging) moveReveal(getX(e)); });
+    document.addEventListener("touchmove",  e => { if (isDragging) moveReveal(getX(e)); }, { passive: true });
+
+    document.addEventListener("mouseup",    () => { isDragging = false; });
+    document.addEventListener("touchend",   () => { isDragging = false; });
+  }
+
+  /* ── INIT ── */
+  document.addEventListener("DOMContentLoaded", () => {
+    loadCase(0);
+    initDrag();
+  });
+  </script>
+</body>
+</html>

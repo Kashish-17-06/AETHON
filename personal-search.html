@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VerifyIt — Search About Me</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* ── PAGE-SPECIFIC STYLES ── */
+
+    .page-header {
+      position: relative;
+      z-index: 1;
+      padding: 140px 40px 60px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-bottom: 40px;
+      transition: color 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    .back-link:hover { color: var(--accent); }
+
+    .page-title {
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 800;
+      letter-spacing: -2.5px;
+      line-height: 1;
+      margin-bottom: 16px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.1s;
+    }
+
+    .page-title span { color: var(--accent); }
+
+    .page-subtitle {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 520px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.25s;
+    }
+
+    /* ── SEARCH FORM ── */
+    .search-section {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 40px 60px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.4s;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-field.full { grid-column: 1 / -1; }
+
+    .field-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .field-input {
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 300;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      width: 100%;
+    }
+
+    .field-input::placeholder { color: var(--text-dim); }
+
+    .field-input:focus {
+      border-color: rgba(59,255,200,0.5);
+      box-shadow: var(--glow-accent);
+    }
+
+    select.field-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7fa3' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
+    }
+
+    select.field-input option {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .search-btn-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    .search-main-btn {
+      background: var(--accent);
+      color: #050810;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 36px;
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: -0.3px;
+      transition: transform 0.15s, box-shadow 0.3s;
+      flex-shrink: 0;
+    }
+
+    .search-main-btn:hover {
+      transform: scale(1.02);
+      box-shadow: var(--glow-accent);
+    }
+
+    .search-main-btn:active { transform: scale(0.98); }
+
+    .privacy-note {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    .privacy-note span { color: var(--accent); }
+
+    /* ── LOADER ── */
+    .personal-loader {
+      display: none;
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 40px 40px;
+    }
+
+    .personal-loader.active { display: block; }
+
+    .loader-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .scan-text {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .scan-sources {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      max-width: 480px;
+    }
+
+    .source-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      transition: all 0.3s;
+    }
+
+    .source-tag.scanning {
+      border-color: rgba(59,255,200,0.4);
+      color: var(--accent);
+      background: rgba(59,255,200,0.05);
+    }
+
+    .source-tag.done {
+      border-color: rgba(59,255,200,0.2);
+      color: var(--text-muted);
+    }
+
+    /* ── RESULTS ── */
+    #person-results {
+      display: none;
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 40px 80px;
+    }
+
+    #person-results.visible { display: block; }
+
+    /* Summary banner */
+    .result-banner {
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .banner-safe   { background: rgba(59,255,200,0.07);  border: 1px solid rgba(59,255,200,0.2); }
+    .banner-danger { background: rgba(255,92,92,0.07);   border: 1px solid rgba(255,92,92,0.25); }
+    .banner-warn   { background: rgba(255,187,59,0.07);  border: 1px solid rgba(255,187,59,0.2); }
+
+    .banner-icon {
+      font-size: 48px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .banner-text { flex: 1; }
+
+    .banner-heading {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-bottom: 6px;
+    }
+
+    .banner-safe   .banner-heading { color: var(--accent); }
+    .banner-danger .banner-heading { color: var(--danger); }
+    .banner-warn   .banner-heading { color: var(--warn); }
+
+    .banner-desc {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    .banner-count {
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .count-num {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -3px;
+      line-height: 1;
+    }
+
+    .banner-safe   .count-num { color: var(--accent); }
+    .banner-danger .count-num { color: var(--danger); }
+    .banner-warn   .count-num { color: var(--warn); }
+
+    .count-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── FILTER ROW ── */
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 6px 16px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-chip.active,
+    .filter-chip:hover {
+      background: var(--surface2);
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+
+    .filter-chip.chip-danger.active  { border-color: rgba(255,92,92,0.4);  color: var(--danger);  background: rgba(255,92,92,0.08); }
+    .filter-chip.chip-warn.active    { border-color: rgba(255,187,59,0.4); color: var(--warn);    background: rgba(255,187,59,0.08); }
+    .filter-chip.chip-safe.active    { border-color: rgba(59,255,200,0.4); color: var(--accent);  background: rgba(59,255,200,0.08); }
+
+    /* ── NEWS CARD ── */
+    .news-list { display: flex; flex-direction: column; gap: 16px; }
+
+    .news-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      transition: border-color 0.2s;
+      cursor: pointer;
+    }
+
+    .news-card:hover { border-color: var(--border-strong); }
+
+    .news-card.danger { border-left: 3px solid var(--danger); }
+    .news-card.warn   { border-left: 3px solid var(--warn); }
+    .news-card.safe   { border-left: 3px solid var(--accent); }
+
+    .news-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .news-headline {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      color: var(--text);
+      line-height: 1.4;
+      flex: 1;
+    }
+
+    .news-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 100px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .badge-fake     { background: rgba(255,92,92,0.12);  color: var(--danger); border: 1px solid rgba(255,92,92,0.25); }
+    .badge-mislead  { background: rgba(255,187,59,0.12); color: var(--warn);   border: 1px solid rgba(255,187,59,0.25); }
+    .badge-satire   { background: rgba(99,183,255,0.12); color: var(--accent2);border: 1px solid rgba(99,183,255,0.25); }
+    .badge-verified { background: rgba(59,255,200,0.12); color: var(--accent); border: 1px solid rgba(59,255,200,0.25); }
+
+    .news-meta {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .meta-item span { color: var(--text-muted); }
+
+    .news-snippet {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin-bottom: 16px;
+      font-family: var(--font-mono);
+      font-weight: 300;
+    }
+
+    .news-snippet strong { color: var(--danger); font-weight: 600; }
+    .news-snippet em     { color: var(--warn);   font-style: normal; font-weight: 600; }
+
+    .news-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 7px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.03em;
+    }
+
+    .action-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text);
+      background: var(--surface2);
+    }
+
+    .action-btn.primary {
+      background: rgba(255,92,92,0.1);
+      border-color: rgba(255,92,92,0.3);
+      color: var(--danger);
+    }
+
+    .action-btn.primary:hover {
+      background: rgba(255,92,92,0.18);
+    }
+
+    .action-btn.report {
+      background: rgba(59,255,200,0.08);
+      border-color: rgba(59,255,200,0.25);
+      color: var(--accent);
+    }
+
+    /* Expand/collapse detail */
+    .news-detail {
+      display: none;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .news-detail.open { display: block; }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .detail-box {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .detail-box-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .detail-box-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .detail-box-sub {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      font-weight: 300;
+    }
+
+    .refutation-box {
+      background: rgba(59,255,200,0.05);
+      border: 1px solid rgba(59,255,200,0.15);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .refutation-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .refutation-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      font-family: var(--font-mono);
+      font-weight: 300;
+    }
+
+    /* ── TAKEDOWN PANEL ── */
+    .takedown-panel {
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 16px;
+      padding: 28px;
+      margin-top: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .takedown-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--danger), var(--warn));
+    }
+
+    .takedown-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .takedown-desc {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 300;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .takedown-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .takedown-step {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .ts-num {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--accent2);
+      margin-bottom: 8px;
+    }
+
+    .ts-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin-bottom: 6px;
+    }
+
+    .ts-desc {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 300;
+      line-height: 1.5;
+    }
+
+    .takedown-btn {
+      background: var(--danger);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 32px;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: -0.2px;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+
+    .takedown-btn:hover { opacity: 0.88; transform: scale(1.02); }
+
+    /* ── CLEAN RESULT ── */
+    .clean-result-card {
+      background: var(--surface);
+      border: 1px solid rgba(59,255,200,0.2);
+      border-radius: 16px;
+      padding: 60px 40px;
+      text-align: center;
+    }
+
+    .clean-icon { font-size: 56px; margin-bottom: 20px; }
+
+    .clean-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .clean-desc {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 480px;
+      margin: 0 auto 28px;
+    }
+
+    .alert-btn {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: -0.2px;
+    }
+
+    .alert-btn:hover {
+      background: rgba(59,255,200,0.1);
+      box-shadow: var(--glow-accent);
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      z-index: 500;
+      background: var(--surface2);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 300;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast span { color: var(--accent); }
+
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scan-line" id="scan-line"></div>
+
+  <!-- ── NAV ── -->
+  <nav>
+    <div class="nav-logo">
+      <div class="logo-icon">🛡</div>
+      VerifyIt
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Verify URL</a></li>
+      <li><a href="personal-search.html" style="color:var(--accent)">Search About Me</a></li>
+      <li><a href="#">API</a></li>
+    </ul>
+    <div class="nav-badge">BETA v0.1</div>
+  </nav>
+
+  <!-- ── PAGE HEADER ── -->
+  <div class="page-header">
+    <a href="index.html" class="back-link">← Back to VerifyIt</a>
+    <h1 class="page-title">Search <span>About Me</span></h1>
+    <p class="page-subtitle">
+      Enter your name and details to scan the web for fake news,
+      fabricated stories, or misleading content published about you.
+      We check 200+ sources in seconds.
+    </p>
+  </div>
+
+  <!-- ── SEARCH FORM ── */
+  <div class="search-section">
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="field-label">Full Name *</label>
+        <input class="field-input" id="person-name" type="text" placeholder="e.g. Rahul Sharma"/>
+      </div>
+      <div class="form-field">
+        <label class="field-label">Also Known As / Alias</label>
+        <input class="field-input" id="person-alias" type="text" placeholder="Nickname or alternate spelling"/>
+      </div>
+      <div class="form-field">
+        <label class="field-label">Profession / Role</label>
+        <input class="field-input" id="person-role" type="text" placeholder="e.g. Politician, Doctor, Journalist"/>
+      </div>
+      <div class="form-field">
+        <label class="field-label">City / Region</label>
+        <input class="field-input" id="person-city" type="text" placeholder="e.g. Mumbai, Delhi, New York"/>
+      </div>
+      <div class="form-field full">
+        <label class="field-label">Search Time Range</label>
+        <select class="field-input" id="person-range">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 3 months</option>
+          <option value="365">Last 1 year</option>
+          <option value="all">All time</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="search-btn-row">
+      <button class="search-main-btn" onclick="runPersonSearch()">
+        🔍 Search My Name
+      </button>
+      <p class="privacy-note">
+        🔒 Your details are <span>never stored</span>. This search is private and encrypted.<br/>
+        We only scan publicly available web content.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── LOADER ── -->
+  <div class="personal-loader" id="person-loader">
+    <div class="loader-card">
+      <div class="loader-ring"></div>
+      <div class="scan-text" id="scan-status">Initialising deep web scan...</div>
+      <div class="scan-sources" id="scan-sources">
+        <span class="source-tag" id="src-news">News Sites</span>
+        <span class="source-tag" id="src-social">Social Media</span>
+        <span class="source-tag" id="src-blogs">Blogs</span>
+        <span class="source-tag" id="src-forums">Forums</span>
+        <span class="source-tag" id="src-fact">Fact-Check DBs</span>
+        <span class="source-tag" id="src-archive">Web Archive</span>
+        <span class="source-tag" id="src-video">Video Platforms</span>
+        <span class="source-tag" id="src-wiki">Wiki Sources</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div id="person-results">
+
+    <!-- Summary Banner (filled by JS) -->
+    <div id="result-banner"></div>
+
+    <!-- Filter chips -->
+    <div class="filter-row" id="filter-row" style="display:none">
+      <button class="filter-chip active" onclick="filterCards(this,'all')">All Results</button>
+      <button class="filter-chip chip-danger" onclick="filterCards(this,'danger')">🔴 Fake News</button>
+      <button class="filter-chip chip-warn"   onclick="filterCards(this,'warn')">🟡 Misleading</button>
+      <button class="filter-chip chip-safe"   onclick="filterCards(this,'safe')">🟢 Verified True</button>
+    </div>
+
+    <!-- News cards list -->
+    <div class="news-list" id="news-list"></div>
+
+    <!-- Takedown panel (shown if fake/misleading news found) -->
+    <div class="takedown-panel" id="takedown-panel" style="display:none">
+      <div class="takedown-title">⚖️ Want to take action?</div>
+      <p class="takedown-desc">
+        If fake or misleading content about you is verified, you have legal and platform options
+        to request removal, publish a rebuttal, or escalate to authorities.
+      </p>
+      <div class="takedown-steps">
+        <div class="takedown-step">
+          <div class="ts-num">STEP 01 —</div>
+          <div class="ts-title">Flag & Report</div>
+          <div class="ts-desc">Submit a formal report to the publishing platform. We generate the report letter for you.</div>
+        </div>
+        <div class="takedown-step">
+          <div class="ts-num">STEP 02 —</div>
+          <div class="ts-title">Legal Notice</div>
+          <div class="ts-desc">Draft a cease & desist or defamation notice. Connect with a partner legal firm if needed.</div>
+        </div>
+        <div class="takedown-step">
+          <div class="ts-num">STEP 03 —</div>
+          <div class="ts-title">Publish Rebuttal</div>
+          <div class="ts-desc">Post a verified counter-statement through VerifyIt that ranks alongside the false content.</div>
+        </div>
+      </div>
+      <button class="takedown-btn" onclick="showToast('Takedown request feature coming soon in v1.0!')">
+        Start Takedown Process →
+      </button>
+    </div>
+
+  </div>
+  <!-- end #person-results -->
+
+  <!-- ── TOAST ── -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  /* ============================================================
+     personal-search.js (inline for single-file convenience)
+     ============================================================ */
+
+  /* ── DEMO DATABASE ──
+     Simulated fake-news records keyed by name keywords.
+     In production: replace with real API / search engine.
+  ------------------------------------------------------------ */
+  const fakeNewsDB = {
+    "rahul": [
+      {
+        type: "danger",
+        badge: ["FAKE NEWS", "badge-fake"],
+        headline: "Rahul Sharma arrested for financial fraud worth ₹50 crore",
+        source: "viraltruth24.net",
+        date: "March 14, 2026",
+        reach: "2.4M views",
+        snippet: `A fabricated report falsely claims <strong>Rahul Sharma was arrested</strong> by the ED in connection with a ₹50 crore scam. The article uses a doctored photo and cites a non-existent court order.`,
+        detail: {
+          publishedAt: "viraltruth24.net",
+          domainAge: "4 months old",
+          factCheckedBy: "BOOM Live, Alt News",
+          verdict: "Completely False",
+          refutation: "No such arrest took place. The ED has no record of this case. The photograph used is from a 2021 unrelated news story. Both BOOM and Alt News have independently debunked this article."
+        }
+      },
+      {
+        type: "warn",
+        badge: ["MISLEADING", "badge-mislead"],
+        headline: "Rahul Sharma's business linked to controversial land deal",
+        source: "thenewsflash.in",
+        date: "March 8, 2026",
+        reach: "890K views",
+        snippet: `Article <em>selectively quotes</em> from a municipal document to suggest wrongdoing, omitting key context that the land deal was fully approved and publicly disclosed.`,
+        detail: {
+          publishedAt: "thenewsflash.in",
+          domainAge: "2 years old",
+          factCheckedBy: "The Quint",
+          verdict: "Misleading — context omitted",
+          refutation: "The land transaction referenced was approved by the Municipal Corporation on Dec 12, 2025, and disclosed in the public gazette. The article omits this entirely, creating a false impression of wrongdoing."
+        }
+      },
+      {
+        type: "safe",
+        badge: ["VERIFIED", "badge-verified"],
+        headline: "Rahul Sharma wins regional entrepreneur award 2026",
+        source: "businesstoday.in",
+        date: "February 28, 2026",
+        reach: "340K views",
+        snippet: `Verified news coverage of the annual awards ceremony. All facts, dates, and quotes are confirmed accurate by our cross-reference check.`,
+        detail: {
+          publishedAt: "businesstoday.in",
+          domainAge: "18 years old",
+          factCheckedBy: "VerifyIt automated check",
+          verdict: "Verified Accurate",
+          refutation: "This article has been independently verified. No inaccuracies detected."
+        }
+      }
+    ],
+
+    "priya": [
+      {
+        type: "danger",
+        badge: ["FAKE NEWS", "badge-fake"],
+        headline: "Dr. Priya Menon fined for malpractice — licence suspended",
+        source: "healthalert-india.com",
+        date: "March 17, 2026",
+        reach: "1.1M views",
+        snippet: `A <strong>completely fabricated story</strong> claims Dr. Priya Menon's medical licence was suspended by the MCI. The MCI has issued a public denial. The domain was registered just 2 months ago.`,
+        detail: {
+          publishedAt: "healthalert-india.com",
+          domainAge: "2 months old",
+          factCheckedBy: "Medical Council of India (official denial)",
+          verdict: "False — Official Denial Issued",
+          refutation: "The Medical Council of India has officially confirmed no such action was taken. Dr. Priya Menon's licence is valid and in good standing. The publishing domain has no editorial history."
+        }
+      },
+      {
+        type: "warn",
+        badge: ["MISLEADING", "badge-mislead"],
+        headline: "Priya Menon's clinic faces 'multiple complaints' from patients",
+        source: "consumerwatch.blog",
+        date: "March 3, 2026",
+        reach: "220K views",
+        snippet: `Blog post cites <em>"multiple unverified complaints"</em> without naming sources. One confirmed complaint (routine billing dispute) was resolved 6 months ago and is being misrepresented as ongoing.`,
+        detail: {
+          publishedAt: "consumerwatch.blog",
+          domainAge: "8 months old",
+          factCheckedBy: "VerifyIt + Court Records",
+          verdict: "Misleading — outdated and exaggerated",
+          refutation: "Only one complaint was ever filed — a billing dispute that was fully resolved in October 2025. The article presents this as multiple ongoing complaints, which is factually incorrect."
+        }
+      }
+    ],
+
+    "default": [
+      {
+        type: "danger",
+        badge: ["FAKE NEWS", "badge-fake"],
+        headline: `"{name}" involved in scam targeting senior citizens`,
+        source: "exposenews.xyz",
+        date: "March 18, 2026",
+        reach: "3.2M views",
+        snippet: `A viral post falsely names <strong>"{name}"</strong> in a senior citizen fraud ring. The post has been shared 48,000 times. No police record, FIR, or court document supports this claim.`,
+        detail: {
+          publishedAt: "exposenews.xyz",
+          domainAge: "1 month old",
+          factCheckedBy: "FactCheck India",
+          verdict: "Completely False",
+          refutation: "No police record, FIR, or court filing exists with this name in connection to the described incident. FactCheck India has rated this claim FALSE. The originating account has since been suspended."
+        }
+      },
+      {
+        type: "warn",
+        badge: ["MISLEADING", "badge-mislead"],
+        headline: `"{name}" quoted saying controversial statement — fact check`,
+        source: "quotesthat.news",
+        date: "March 10, 2026",
+        reach: "567K views",
+        snippet: `A quote attributed to <em>"{name}"</em> is taken out of context from a 2019 interview, omitting the full sentence which reverses the meaning entirely.`,
+        detail: {
+          publishedAt: "quotesthat.news",
+          domainAge: "11 months old",
+          factCheckedBy: "Snopes, AFP Fact Check",
+          verdict: "Misleading — quote taken out of context",
+          refutation: "The original interview from 2019 shows the complete sentence had the opposite meaning. Both Snopes and AFP rated this as 'missing context'. The article has been updated with an editor's note but continues to circulate in its original form."
+        }
+      }
+    ]
+  };
+
+  /* ── UTILITY: TOAST ── */
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.innerHTML = message;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 3500);
+  }
+
+  /* ── UTILITY: FILTER CARDS ── */
+  function filterCards(btn, type) {
+    document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+    btn.classList.add("active");
+
+    document.querySelectorAll(".news-card").forEach(card => {
+      if (type === "all") {
+        card.style.display = "block";
+      } else {
+        card.style.display = card.classList.contains(type) ? "block" : "none";
+      }
+    });
+  }
+
+  /* ── UTILITY: TOGGLE CARD DETAIL ── */
+  function toggleDetail(cardId) {
+    const detail = document.getElementById("detail-" + cardId);
+    if (!detail) return;
+    detail.classList.toggle("open");
+    const btn = document.getElementById("expand-" + cardId);
+    if (btn) btn.textContent = detail.classList.contains("open") ? "▲ Hide Details" : "▼ View Details";
+  }
+
+  /* ── SELECT RESULTS FROM DB ── */
+  function getResultsForName(name) {
+    const lower = name.toLowerCase();
+    for (const key of Object.keys(fakeNewsDB)) {
+      if (key !== "default" && lower.includes(key)) {
+        return { records: fakeNewsDB[key], matched: true };
+      }
+    }
+    return { records: fakeNewsDB["default"], matched: false };
+  }
+
+  /* ── BUILD NEWS CARD HTML ── */
+  function buildNewsCard(item, index, name) {
+    const headline = item.headline.replace(/\{name\}/g, name);
+    const snippet  = item.snippet.replace(/\{name\}/g, name);
+    const refutation = item.detail.refutation.replace(/\{name\}/g, name);
+
+    return `
+      <div class="news-card ${item.type}" id="card-${index}">
+        <div class="news-card-header">
+          <div class="news-headline">${headline}</div>
+          <span class="news-badge ${item.badge[1]}">${item.badge[0]}</span>
+        </div>
+
+        <div class="news-meta">
+          <div class="meta-item">🌐 <span>${item.source}</span></div>
+          <div class="meta-item">📅 <span>${item.date}</span></div>
+          <div class="meta-item">👁️ <span>${item.reach}</span></div>
+        </div>
+
+        <p class="news-snippet">${snippet}</p>
+
+        <div class="news-actions">
+          ${item.type !== "safe" ? `<button class="action-btn primary" onclick="showToast('Report submitted for: ${item.source}')">🚨 Report This</button>` : ""}
+          <button class="action-btn" id="expand-${index}" onclick="toggleDetail(${index})">▼ View Details</button>
+          <button class="action-btn" onclick="showToast('Link copied to clipboard!')">🔗 Share Fact-Check</button>
+          ${item.type !== "safe" ? `<button class="action-btn report" onclick="showToast('Takedown request prepared for ${item.source}')">⚖️ Request Takedown</button>` : ""}
+        </div>
+
+        <div class="news-detail" id="detail-${index}">
+          <div class="detail-grid">
+            <div class="detail-box">
+              <div class="detail-box-label">Published On</div>
+              <div class="detail-box-value">${item.detail.publishedAt}</div>
+              <div class="detail-box-sub">Domain age: ${item.detail.domainAge}</div>
+            </div>
+            <div class="detail-box">
+              <div class="detail-box-label">Fact-Checked By</div>
+              <div class="detail-box-value">${item.detail.factCheckedBy}</div>
+              <div class="detail-box-sub">Verdict: ${item.detail.verdict}</div>
+            </div>
+          </div>
+          <div class="refutation-box">
+            <div class="refutation-label">✅ What's Actually True</div>
+            <p class="refutation-text">${refutation}</p>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ── RENDER RESULTS ── */
+  function renderResults(name, records) {
+    const area   = document.getElementById("person-results");
+    const banner = document.getElementById("result-banner");
+    const list   = document.getElementById("news-list");
+    const filters= document.getElementById("filter-row");
+    const takedown = document.getElementById("takedown-panel");
+
+    const fakeCount     = records.filter(r => r.type === "danger").length;
+    const misleadCount  = records.filter(r => r.type === "warn").length;
+    const hasBadContent = fakeCount + misleadCount > 0;
+
+    /* Banner */
+    if (fakeCount > 0) {
+      banner.className = "result-banner banner-danger";
+      banner.innerHTML = `
+        <div class="banner-icon">⚠️</div>
+        <div class="banner-text">
+          <div class="banner-heading">Fake content found about you</div>
+          <div class="banner-desc">We found ${records.length} result(s) mentioning "${name}". ${fakeCount} article(s) contain false or fabricated information. Review each result and use the takedown tools below.</div>
+        </div>
+        <div class="banner-count">
+          <div class="count-num">${records.length}</div>
+          <div class="count-label">Results found</div>
+        </div>`;
+    } else if (misleadCount > 0) {
+      banner.className = "result-banner banner-warn";
+      banner.innerHTML = `
+        <div class="banner-icon">🟡</div>
+        <div class="banner-text">
+          <div class="banner-heading">Misleading content detected</div>
+          <div class="banner-desc">We found ${records.length} result(s) mentioning "${name}". No outright fake news, but ${misleadCount} article(s) present misleading or out-of-context information.</div>
+        </div>
+        <div class="banner-count">
+          <div class="count-num">${records.length}</div>
+          <div class="count-label">Results found</div>
+        </div>`;
+    } else {
+      banner.className = "result-banner banner-safe";
+      banner.innerHTML = `
+        <div class="banner-icon">✅</div>
+        <div class="banner-text">
+          <div class="banner-heading">All clear — no fake news found</div>
+          <div class="banner-desc">We scanned 200+ sources and found no fake or misleading content about "${name}" in the selected time range. Set up an alert to be notified if anything appears.</div>
+        </div>
+        <div class="banner-count">
+          <div class="count-num">${records.length}</div>
+          <div class="count-label">Mentions found</div>
+        </div>`;
+    }
+
+    /* Cards */
+    list.innerHTML = records.map((item, i) => buildNewsCard(item, i, name)).join("");
+
+    /* Filters */
+    filters.style.display = records.length > 1 ? "flex" : "none";
+
+    /* Takedown panel */
+    takedown.style.display = hasBadContent ? "block" : "none";
+
+    area.classList.add("visible");
+    area.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  /* ── SCAN ANIMATION ── */
+  async function animateScan(name) {
+    const statuses = [
+      `Searching for "${name}" across news databases...`,
+      `Scanning social media platforms...`,
+      `Cross-referencing fact-check archives...`,
+      `Analysing image metadata...`,
+      `Checking web archive history...`,
+      `Computing results...`
+    ];
+
+    const sources = ["src-news","src-social","src-blogs","src-forums","src-fact","src-archive","src-video","src-wiki"];
+    const statusEl = document.getElementById("scan-status");
+
+    return new Promise(resolve => {
+      let step = 0;
+
+      const interval = setInterval(() => {
+        // Update status text
+        if (step < statuses.length) {
+          statusEl.textContent = statuses[step];
+        }
+
+        // Light up source tags one by one
+        if (step < sources.length) {
+          const el = document.getElementById(sources[step]);
+          if (el) {
+            el.classList.add("scanning");
+            if (step > 0) {
+              const prev = document.getElementById(sources[step - 1]);
+              if (prev) { prev.classList.remove("scanning"); prev.classList.add("done"); }
+            }
+          }
+        }
+
+        step++;
+
+        if (step > sources.length) {
+          // Mark all done
+          sources.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.classList.remove("scanning"); el.classList.add("done"); }
+          });
+          clearInterval(interval);
+          resolve();
+        }
+      }, 380);
+    });
+  }
+
+  /* ── MAIN SEARCH FUNCTION ── */
+  async function runPersonSearch() {
+    const nameInput = document.getElementById("person-name");
+    const name = nameInput.value.trim();
+
+    if (!name) {
+      nameInput.style.borderColor = "rgba(255,92,92,0.6)";
+      nameInput.focus();
+      setTimeout(() => { nameInput.style.borderColor = ""; }, 1400);
+      showToast("Please enter a name to search.");
+      return;
+    }
+
+    const loader  = document.getElementById("person-loader");
+    const results = document.getElementById("person-results");
+
+    /* Reset state */
+    results.classList.remove("visible");
+    document.querySelectorAll(".source-tag").forEach(el => {
+      el.classList.remove("scanning", "done");
+    });
+
+    loader.classList.add("active");
+    triggerScan();
+
+    /* Animate scan */
+    await animateScan(name);
+
+    /* Brief pause before showing results */
+    await new Promise(r => setTimeout(r, 500));
+
+    loader.classList.remove("active");
+
+    /* Get and render results */
+    const { records } = getResultsForName(name);
+    renderResults(name, records);
+  }
+
+  /* ── SCAN LINE ── */
+  function triggerScan() {
+    const line = document.getElementById("scan-line");
+    line.classList.remove("active");
+    void line.offsetWidth;
+    line.classList.add("active");
+  }
+
+  /* ── ENTER KEY ── */
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("person-name").addEventListener("keydown", e => {
+      if (e.key === "Enter") runPersonSearch();
+    });
+  });
+  </script>
+</body>
+</html>
